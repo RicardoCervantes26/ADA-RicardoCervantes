@@ -1,0 +1,110 @@
+// ---------------------------------------
+// Autor: Ricardo Cervantes Tejada
+// Interfaz gráfica para el sistema de boticas
+// ---------------------------------------
+
+package sistemaboticas;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class BoticasGUI extends JFrame {
+
+    public BoticasGUI() {
+        // Configuración de la ventana
+        setTitle("Sistema de Boticas - UTP");
+        setSize(600, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null); // Centrar la ventana
+
+        // Panel principal
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(4, 1, 10, 10));
+
+        // Botones del menú
+        JButton btnClientes = new JButton("Registrar Cliente");
+        JButton btnProductos = new JButton("Registrar Producto");
+        JButton btnPedidos = new JButton("Registrar Pedido");
+        JButton btnReporte = new JButton("Ver Reporte de Pedidos");
+
+        // Acciones de los botones
+        btnClientes.addActionListener(e -> {
+            String dni = JOptionPane.showInputDialog("Ingrese DNI:");
+            String nombre = JOptionPane.showInputDialog("Ingrese nombre:");
+            String apellido = JOptionPane.showInputDialog("Ingrese apellido:");
+            String direccion = JOptionPane.showInputDialog("Ingrese dirección:");
+
+            if (dni != null && nombre != null) {
+                Cliente nuevo = new Cliente(dni, nombre, apellido, direccion);
+                Cliente.agregarCliente(nuevo);
+                JOptionPane.showMessageDialog(this, "Cliente registrado exitosamente.");
+            }
+        });
+
+        btnProductos.addActionListener(e -> {
+            String codigo = JOptionPane.showInputDialog("Ingrese código del producto:");
+            String nombre = JOptionPane.showInputDialog("Ingrese nombre del producto:");
+            double precio = Double.parseDouble(JOptionPane.showInputDialog("Ingrese precio:"));
+            int stock = Integer.parseInt(JOptionPane.showInputDialog("Ingrese stock:"));
+
+            Producto nuevo = new Producto(codigo, nombre, precio, stock);
+            Producto.agregarProducto(nuevo);
+            JOptionPane.showMessageDialog(this, "Producto registrado exitosamente.");
+        });
+
+        btnPedidos.addActionListener(e -> {
+            String dniCliente = JOptionPane.showInputDialog("Ingrese DNI del cliente:");
+
+            Cliente cliente = Cliente.buscarClientePorDNI(dniCliente);
+            if (cliente == null) {
+                JOptionPane.showMessageDialog(this, "Cliente no encontrado.");
+                return;
+            }
+
+            String codigoProd = JOptionPane.showInputDialog("Ingrese código de producto:");
+            Producto producto = Producto.buscarProductoPorCodigo(codigoProd);
+
+            if (producto == null) {
+                JOptionPane.showMessageDialog(this, "Producto no encontrado.");
+                return;
+            }
+
+            int cantidad = Integer.parseInt(JOptionPane.showInputDialog("Ingrese cantidad:"));
+            Pedido nuevoPedido = new Pedido(cliente, producto, cantidad);
+            Pedido.agregarPedido(nuevoPedido);
+
+            JOptionPane.showMessageDialog(this, "Pedido registrado exitosamente.");
+        });
+
+        btnReporte.addActionListener(e -> {
+            String dni = JOptionPane.showInputDialog("Ingrese DNI del cliente:");
+
+            // En vez de imprimir en consola, mostramos en JTextArea
+            JTextArea area = new JTextArea(15, 40);
+            area.setEditable(false);
+
+            String reporte = ReportePedidos.generarReporte(dni);
+            area.setText(reporte);
+
+            JScrollPane scroll = new JScrollPane(area);
+            JOptionPane.showMessageDialog(this, scroll, "Reporte de Pedidos", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        // Agregar botones al panel
+        panel.add(btnClientes);
+        panel.add(btnProductos);
+        panel.add(btnPedidos);
+        panel.add(btnReporte);
+
+        // Agregar panel a la ventana
+        add(panel);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new BoticasGUI().setVisible(true);
+        });
+    }
+}
+ AVANCE PARA UNA INTERFAZ GRAFICA
