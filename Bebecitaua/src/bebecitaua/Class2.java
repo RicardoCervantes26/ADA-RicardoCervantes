@@ -109,73 +109,96 @@ public class Class2 {
 }
 /*
 =============================================================
-   MI IDEA PARA IMPLEMENTAR ORDENACIÓN EXTERNA EN JAVA
+   AVANCE PERSONAL DE ORDENACIÓN EXTERNA EN NETBEANS
 =============================================================
 
-Yo pienso que, si en algún momento quiero ordenar MUCHOS datos que no 
-entran en memoria, lo mejor es trabajar con un "Merge Sort Externo". 
-Esto me permite dividir el archivo en partes pequeñas, ordenarlas en 
-memoria y después unirlas de nuevo en un archivo final ya ordenado. 
+Ya empecé a implementar la idea de ordenación externa dentro de mi trabajo
+en NetBeans. La verdad todavía no lo termino, estoy probando y ajustando
+los métodos, pero al menos ya logré que se lean los datos desde un archivo,
+se dividan en bloques y se guarden en archivos temporales. 
 
-Lo que planeo hacer es más o menos así:
+Ahorita estoy en la parte de la mezcla de archivos, y como son varios,
+quiero hacerlo con una PriorityQueue para que siempre vaya sacando el número
+más pequeño de cada archivo y armar poco a poco el archivo final ordenado.
 
-1. Tener un archivo grande (por ejemplo "notas.txt") con miles de números.
-2. Leerlos en bloques pequeños que sí puedan entrar en memoria, 
-   por ejemplo de 1000 en 1000.
-3. Ordenar cada bloque en memoria con Arrays.sort().
-4. Guardar cada bloque ordenado en un archivo temporal.
-5. Al final, juntar todos esos archivos temporales en un único archivo 
-   "notas_ordenadas.txt" usando una mezcla (merge).
+Lo que llevo hasta ahora es algo así:
 
-Un avance del código que me imagino sería algo así:
+// Método que guarda cada bloque ordenado en un archivo temporal
+private static File guardarBloqueOrdenado(List<Integer> buffer) throws IOException {
+    File temp = File.createTempFile("bloqueOrdenado", ".txt");
+    temp.deleteOnExit();
+    BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
+    for (int num : buffer) {
+        bw.write(num + "\n");
+    }
+    bw.close();
+    return temp;
+}
 
-// Primero leo el archivo original por bloques
-BufferedReader br = new BufferedReader(new FileReader("notas.txt"));
-List<Integer> buffer = new ArrayList<>();
-List<File> archivosTemporales = new ArrayList<>();
-String linea;
-int MAX = 1000; // cantidad máxima que quiero manejar en RAM
+// Método que empieza a mezclar varios archivos ordenados
+private static void mezclarArchivosOrdenados(List<File> archivos, File archivoFinal) throws IOException {
+    PriorityQueue<NumeroArchivo> cola = new PriorityQueue<>();
+    
+    // Abro cada archivo temporal y lo guardo en un "buffer"
+    for (File f : archivos) {
+        NumeroArchivo na = new NumeroArchivo(f);
+        if (!na.estaVacio()) {
+            cola.add(na);
+        }
+    }
+    
+    BufferedWriter bw = new BufferedWriter(new FileWriter(archivoFinal));
+    
+    while (!cola.isEmpty()) {
+        NumeroArchivo actual = cola.poll();
+        Integer val = actual.sacarNumero();
+        bw.write(val + "\n");
+        
+        if (!actual.estaVacio()) {
+            cola.add(actual); // lo vuelvo a meter si aún tiene datos
+        }
+    }
+    bw.close();
+}
 
-while ((linea = br.readLine()) != null) {
-    buffer.add(Integer.parseInt(linea));
+// Clase interna que estoy probando para manejar cada archivo ordenado
+static class NumeroArchivo implements Comparable<NumeroArchivo> {
+    private BufferedReader br;
+    private Integer cache;
 
-    // Si ya tengo el bloque lleno, lo ordeno y lo guardo
-    if (buffer.size() == MAX) {
-        Collections.sort(buffer);
-        File temp = guardarBloqueOrdenado(buffer); // este método lo crearé
-        archivosTemporales.add(temp);
-        buffer.clear();
+    public NumeroArchivo(File file) throws IOException {
+        br = new BufferedReader(new FileReader(file));
+        recargar();
+    }
+
+    private void recargar() throws IOException {
+        String linea = br.readLine();
+        if (linea == null) cache = null;
+        else cache = Integer.parseInt(linea);
+    }
+
+    public boolean estaVacio() { return cache == null; }
+
+    public Integer sacarNumero() throws IOException {
+        Integer val = cache;
+        recargar();
+        return val;
+    }
+
+    @Override
+    public int compareTo(NumeroArchivo otro) {
+        return this.cache.compareTo(otro.cache);
     }
 }
 
-// Si quedó un bloque más pequeño al final también lo guardo
-if (!buffer.isEmpty()) {
-    Collections.sort(buffer);
-    File temp = guardarBloqueOrdenado(buffer);
-    archivosTemporales.add(temp);
-}
-
-// Después de eso pienso hacer otro método que reciba todos los archivos 
-// temporales y los vaya mezclando poco a poco, siempre manteniendo el orden.
-// Algo así:
-
-File archivoFinal = new File("notas_ordenadas.txt");
-mezclarArchivosOrdenados(archivosTemporales, archivoFinal);
-
-// En "guardarBloqueOrdenado" lo que haría es crear un archivo temporal,
-// escribir los números ordenados y devolver ese archivo para luego usarlo 
-// en la mezcla final. Con "mezclarArchivosOrdenados" usaría una especie 
-// de cola de prioridad (PriorityQueue) que siempre me entregue el número 
-// más pequeño de cada archivo y así voy construyendo el archivo final 
-// ordenado línea por línea.
-
-// Todavía no lo termino, pero la idea es que quede un programa que pueda 
-// ordenar un archivo enorme, aunque no entre en la memoria de la computadora. 
-// Ya lo tengo más claro, lo que me falta es sentarme a escribir esos métodos 
-// extras y probarlos.
-
+-------------------------------------------------------------
+La verdad me emociona porque ya lo estoy viendo funcionar en NetBeans, 
+aunque todavía tengo algunos errores con los archivos grandes y la mezcla
+final se demora. Igual ya voy avanzando, poco a poco, y lo bueno es que 
+ya no es solo una idea sino código que estoy escribiendo y probando.
 =============================================================
 */
+
 
 
 
