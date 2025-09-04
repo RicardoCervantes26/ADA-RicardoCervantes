@@ -1,0 +1,109 @@
+import java.io.*;
+import java.util.*;
+
+public class OrdenacionExterna {
+
+    private static final int TAMANO_BLOQUE = 100; // Cantidad de registros que leo por bloque
+
+    public static void main(String[] args) throws IOException {
+        File archivoEntrada = new File("entrada.txt");
+        File archivoSalida = new File("salida.txt");
+
+        ordenarArchivo(archivoEntrada, archivoSalida);
+        System.out.println("Proceso completado. Revisa el archivo salida.txt");
+    }
+
+    public static void ordenarArchivo(File archivoEntrada, File archivoSalida) throws IOException {
+        List<File> archivosTemporales = new ArrayList<>();
+
+        // 1. Dividir el archivo en bloques ordenados
+        try (BufferedReader br = new BufferedReader(new FileReader(archivoEntrada))) {
+            List<String> buffer = new ArrayList<>();
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                buffer.add(linea);
+                if (buffer.size() == TAMANO_BLOQUE) {
+                    archivosTemporales.add(guardarBloqueOrdenado(buffer));
+                    buffer.clear();
+                }
+            }
+            if (!buffer.isEmpty()) {
+                archivosTemporales.add(guardarBloqueOrdenado(buffer));
+            }
+        }
+
+        // 2. Mezclar los bloques ordenados en el archivo final
+        mezclarArchivos(archivosTemporales, archivoSalida);
+
+        // 3. Eliminar los temporales
+        for (File temp : archivosTemporales) {
+            temp.delete();
+        }
+    }
+
+    private static File guardarBloqueOrdenado(List<String> bloque) throws IOException {
+        Collections.sort(bloque); // Ordena el bloque en memoria
+        File temp = File.createTempFile("bloque", ".txt");
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(temp))) {
+            for (String linea : bloque) {
+                bw.write(linea);
+                bw.newLine();
+            }
+        }
+        return temp;
+    }
+
+    private static void mezclarArchivos(List<File> archivos, File archivoSalida) throws IOException {
+        PriorityQueue<EntradaArchivo> pq = new PriorityQueue<>(Comparator.comparing(e -> e.linea));
+        List<BufferedReader> lectores = new ArrayList<>();
+
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(archivoSalida))) {
+            // Inicializar la cola con la primera línea de cada archivo temporal
+            for (File f : archivos) {
+                BufferedReader br = new BufferedReader(new FileReader(f));
+                lectores.add(br);
+                String linea = br.readLine();
+                if (linea != null) {
+                    pq.add(new EntradaArchivo(linea, br));
+                }
+            }
+
+            // Mezclar
+            while (!pq.isEmpty()) {
+                EntradaArchivo ea = pq.poll();
+                bw.write(ea.linea);
+                bw.newLine();
+                String nuevaLinea = ea.lector.readLine();
+                if (nuevaLinea != null) {
+                    pq.add(new EntradaArchivo(nuevaLinea, ea.lector));
+                }
+            }
+        }
+
+        // Cerrar todos los lectores
+        for (BufferedReader br : lectores) {
+            br.close();
+        }
+    }
+
+    private static class EntradaArchivo {
+        String linea;
+        BufferedReader lector;
+
+        EntradaArchivo(String linea, BufferedReader lector) {
+            this.linea = linea;
+            this.lector = lector;
+        }
+    }
+}
+
+/*Avance personal:
+Ya integré el algoritmo de ordenación externa (Merge Sort Externo) en mi proyecto usando NetBeans. 
+Primero logré que el programa divida un archivo grande en bloques pequeños, cada uno ordenado en memoria 
+con Collections.sort. Después implementé la parte de mezclar todos esos bloques en un archivo final ya ordenado, 
+utilizando una PriorityQueue. 
+Por ahora estoy haciendo pruebas con archivos de texto simples (entrada.txt y salida.txt) para verificar 
+que realmente ordene bien los datos. Todavía me falta refinar algunos detalles, como ajustar el tamaño de bloque, 
+manejar archivos más grandes y asegurarme de que los temporales se eliminen bien en todas las pruebas. 
+Pero siento que el avance ya es sólido porque la base del algoritmo está implementada y funcionando.
+*/
