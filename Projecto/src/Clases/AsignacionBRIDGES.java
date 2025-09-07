@@ -6,7 +6,7 @@ public class AsignacionBRIDGES {
     private PedidoBRIDGES pedido;
     private RepartidorBRIDGES repartidor;
     private Date fechaAsignacion;
-    private String estado; // Asignado, En camino, Entregado, Fallido
+    private String estado; // Asignado, En camino, Entregado, Fallidooo!
 
     // Constructor
     public AsignacionBRIDGES(PedidoBRIDGES pedido, RepartidorBRIDGES repartidor) {
