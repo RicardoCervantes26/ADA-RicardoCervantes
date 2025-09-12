@@ -46,7 +46,7 @@ public class EntregaBRIDGES {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
         System.out.println("Pedido: " + pedido.getCodigo() +
                            " | Repartidor: " + repartidor.getNombre() +
-                           " | Estado: " + estado +
+                           " | Estad: " + estado +
                            " | Fecha: " + fechaEntrega.format(formatter));
     }
 }
